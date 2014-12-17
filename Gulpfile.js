@@ -30,7 +30,10 @@ var md52 = require('gulp-md5-plus');
 var cssmin = require('gulp-cssmin');
 var imagemin = require('gulp-imagemin');
 var Q = require("q");
+var Stream = require("stream");
 var bd = {};
+var bdutls = require("./utils.js");
+
 function getMd5(str, len) {
     var md5um = crypto.createHash('md5');
     md5um.update(str, 'utf-8');
@@ -40,7 +43,7 @@ function reloadPage(page) {
     gulp.src(basePath.pagebuild + page + '/*.html').pipe(connect.reload());
 }
 function createMd5() {
-    var Stream = require("stream");
+
     var stream = new Stream.Transform({objectMode: true});
 
     function parsePath(path) {
@@ -159,13 +162,27 @@ gulp.task("server", function () {
         addRootSlash: false
     });
 });
+function compileStatic() {
+    var stream = new Stream.Transform({objectMode: true});
+    console.log(123);
+    stream._transform = function (file, unused, callback) {
+        console.log("456",file,unused,callback);
+    };
+    return stream;
+
+}
+gulp.task('test', function () {
+    console.log("test");
+    gulp.src(["./src/pages/page/index/index.html"]).pipe(compileStatic());
+
+});
 gulp.task("watch", function () {
     gulp.run('server');
     var staticSrc = [basePath.pagesrc + curPage + '/*', basePath.pagesrc + curPage + '/**/*', basePath.pagesrc + curPage + '/**/**/*'];
     gulp.watch(staticSrc, function () {
         gulp.run('build');
-        if(bd.isRefresh) clearTimeout(bd.isRefresh);
-        bd.isRefresh=setTimeout(function () {
+        if (bd.isRefresh) clearTimeout(bd.isRefresh);
+        bd.isRefresh = setTimeout(function () {
             reloadPage(curPage);
         }, 3000);
     });
